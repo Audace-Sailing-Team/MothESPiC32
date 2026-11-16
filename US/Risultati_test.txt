@@ -1,0 +1,361 @@
+AJ-SR04M con ESP32 — riepilogo prove, risultati e prossimi passi
+
+Data del riepilogo: 16 novembre 2026
+
+1. Obiettivo del progetto
+
+Il sistema usa un ESP32 con ESP-IDF 5.5.0 (ambiente PlatformIO) e un
+sensore ultrasonico AJ-SR04M.
+
+Collegamenti attuali: - TRIG: GPIO5 - ECHO: GPIO18
+
+Configurazione del sensore: - Modalità 1. - Resistenza R19 completamente
+assente/aperta (verificato fisicamente). - In modalità 1 il sensore
+riceve un impulso TTL su TRIG e restituisce su ECHO un impulso la cui
+durata è proporzionale al tempo di volo dell’ultrasuono. - Il trigger
+deve essere alto per più di 10 µs; nei test è stato usato un impulso di
+circa 12 µs. - La documentazione indica una zona cieca di circa 20 cm.
+
+Nota elettrica importante: se il sensore è alimentato a 5 V, anche ECHO
+potrebbe essere a 5 V. Il GPIO dell’ESP32 non è tollerante a 5 V: usare
+un partitore resistivo o un level shifter prima di collegare ECHO al
+GPIO18.
+
+2. Cambio del requisito
+
+Inizialmente il requisito era ottenere almeno 100 misurazioni ECHO
+complete al secondo. Non bastava quindi inviare 100 impulsi TRIG/s:
+occorreva ricevere almeno 100 impulsi ECHO completi/s.
+
+Successivamente il requisito è cambiato: non è più necessario
+raggiungere 100 Hz. La priorità è ora ottenere la minima latenza
+possibile, senza perdere risposte del sensore.
+
+La strategia proposta è quindi un ciclo adattivo: 1. inviare TRIG; 2.
+attendere il fronte di salita di ECHO; 3. attendere il fronte di discesa
+di ECHO, completando così la misura; 4. appena la misura è completa,
+inviare il trigger successivo, eventualmente dopo un breve tempo di
+riarmo; 5. misurare i tempi effettivi e verificare statisticamente quali
+intervalli producono il maggior numero di misure valide.
+
+È anche possibile eseguire una prova lunga, per esempio 2 minuti, e
+analizzare successivamente i delta temporali tra gli eventi. È un
+approccio valido e probabilmente più robusto di prove brevi, purché si
+registrino timestamp e contatori sufficienti.
+
+3. Informazioni ricavate dal manuale e dalla configurazione
+
+Dalle informazioni del manuale AJ-SR04M già consultate nella
+conversazione: - Modalità 1: uscita ECHO a larghezza d’impulso. -
+Trigger TTL superiore a 10 µs. - R19 aperta è coerente con la
+modalità 1. - La larghezza di ECHO rappresenta il tempo di andata e
+ritorno dell’onda ultrasonica. - Non è stata individuata una garanzia
+del produttore che assicuri 100 misure complete al secondo.
+
+Riferimenti consultati in precedenza nella conversazione: - Manuale
+AJ-SR04M: riferimenti web turn599672search12 e turn599672search0. -
+Driver/Component Registry ESP-IDF: turn599672search2 e
+turn599672search7.
+
+La modalità UART automatica risultava a 10 Hz. La modalità UART manuale
+non era risultata utilizzabile nella configurazione provata senza una
+resistenza aggiuntiva. È stata quindi preferita l’interfaccia TRIG/ECHO,
+anche perché consente di osservare direttamente la temporizzazione dei
+segnali.
+
+4. Risultati delle prove con TRIG periodico
+
+Sono state eseguite prove inviando TRIG a frequenza prefissata. I
+risultati riportati dall’utente sono:
+
+  -----------------------------------------------------------------------
+  Frequenza TRIG           TRIG           ECHO    Percentuale Note
+       impostata     misurati/s     completi/s      ECHO/TRIG 
+  -------------- -------------- -------------- -------------- -----------
+           50 Hz          49,89          49,89     circa 100% Gap ECHO
+                                                              circa 20 ms
+
+          100 Hz          99,93          50,03      circa 50% Il numero
+                                                              di ECHO non
+                                                              segue i
+                                                              TRIG
+
+          125 Hz         124,94          62,53      circa 50% Gap ECHO
+                                                              circa 16 ms
+
+          150 Hz         149,95          50,03      circa 33% Gap ECHO
+                                                              circa 20 ms
+
+          200 Hz         199,98          66,66      circa 33% Gap ECHO
+                                                              circa 15 ms
+  -----------------------------------------------------------------------
+
+La durata dell’impulso ECHO HIGH era sempre vicina a 1.680 µs (circa
+1.679–1.683 µs).
+
+Interpretazione: - L’ESP32 generava correttamente gli impulsi TRIG alle
+frequenze richieste. - Il numero di ECHO completi non cresceva in modo
+proporzionale alla frequenza TRIG. - I dati suggerivano un limite o un
+comportamento interno di ciclo/riarmo del sensore. - La statistica dei
+trigger intercorsi fra due fronti ECHO non permette, da sola, di
+associare causalmente un determinato ECHO a un determinato TRIG. Non va
+quindi usata per affermare quale specifico trigger abbia generato una
+risposta.
+
+5. Prova sequenziale con attesa della risposta
+
+È stato poi provato un ciclo sequenziale: - invio TRIG di circa 12 µs; -
+attesa del fronte ECHO rising; - attesa del fronte ECHO falling; - nuovo
+ciclo; - timeout di 30 ms per la salita di ECHO.
+
+Risultati su circa 10 secondi:
+
+  Parametro                                 Risultato
+  --------------------------------------- -----------
+  Durata effettiva                           10,013 s
+  TRIG inviati                                    453
+  ECHO completi                                   226
+  Timeout in attesa della salita                  227
+  Timeout in attesa della discesa                   0
+  Frequenza ECHO completa                     22,57/s
+  Tempo TRIG → completamento ECHO medio     13.963 µs
+  Minimo                                    13.959 µs
+  Massimo                                   13.969 µs
+  Intervallo ECHO-ECHO medio                44.172 µs
+
+Il tempo tra fine ECHO e TRIG successivo era stato misurato con una
+media di circa 30.209 µs, ma questa misura comprendeva il timeout di 30
+ms dopo i trigger senza risposta. Non rappresenta quindi il puro tempo
+di riarmo del sensore.
+
+Interpretazione: - In questa configurazione circa metà dei tentativi non
+riceveva un fronte ECHO. - Quando arrivava una risposta, il tempo dal
+TRIG al completamento dell’impulso ECHO era molto stabile, circa 13,96
+ms. - Il valore comprende sia la latenza prima dell’impulso ECHO sia la
+durata HIGH di ECHO; non è tutto tempo di riarmo. - La misura non
+dimostra da sola il limite assoluto del sensore a tutte le distanze e
+condizioni.
+
+6. Sweep del tempo di attesa dopo ECHO
+
+È stato eseguito un altro test con intervalli aggiuntivi dopo il
+completamento di ECHO. Se un trigger non riceveva ECHO, il programma
+attendeva il timeout di 30 ms e riprovava.
+
+Durata di ogni prova: circa 5 secondi.
+
+  -----------------------------------------------------------------------
+  Attesa dopo        TRIG        ECHO     Timeout    Successo      ECHO/s
+         ECHO                completi      salita             
+  ----------- ----------- ----------- ----------- ----------- -----------
+         0 ms         227         113         114      49,78%       22,53
+
+         2 ms         227         113         114      49,78%       22,53
+
+         5 ms         227         113         114      49,78%       22,53
+
+        10 ms         251         251           0        100%       50,01
+
+        15 ms         251         251           0        100%       50,01
+
+        20 ms         167         167           0        100%       33,34
+  -----------------------------------------------------------------------
+
+Tempi TRIG → completamento ECHO: - circa 13.963 µs nei test da 0, 2 e 5
+ms; - circa 13.963 µs nel test da 10 ms; - circa 13.962 µs nel test da
+15 e 20 ms.
+
+Intervalli ECHO-ECHO: - 0 ms: media circa 43.983 µs (min 43.977, max
+44.005); - 2 ms: media circa 43.994 µs; - 5 ms: media circa 43.993 µs; -
+10 ms: media circa 19.995 µs (min 18.775, max 20.004); - 15 ms: media
+circa 19.995 µs (min 18.775, max 20.004); - 20 ms: media circa 29.992 µs
+(min 28.771, max 30.004).
+
+Interpretazione: - Con 10 ms di pausa dopo la fine di ECHO il sistema ha
+ottenuto risposte complete e regolari a circa 50/s. - Anche 15 ms ha
+dato lo stesso risultato, ma non offre un vantaggio rispetto a 10 ms. -
+Con 20 ms la frequenza è scesa a circa 33,3/s, come atteso da una pausa
+aggiuntiva più lunga. - Nei test a 0, 2 e 5 ms si è osservata una
+risposta ogni circa 44 ms, con circa metà dei tentativi in timeout. -
+Questi dati indicano che, nel test eseguito, 10 ms di attesa dopo ECHO
+erano sufficienti per un funzionamento regolare, mentre 0–5 ms non lo
+erano. Non provano però che 10 ms sia il minimo assoluto: il codice, la
+temporizzazione e il comportamento interno del modulo possono influire.
+
+7. Watchdog e problema del polling
+
+Durante i test con attesa di 2 e 5 ms è intervenuto il Task Watchdog:
+
+task_wdt: Task watchdog got triggered
+
+Il backtrace indicava la funzione wait_gpio_level() e il ciclo di
+polling su GPIO. Il codice aspettava il livello del pin con un ciclo
+stretto, senza cedere la CPU. Un’attesa che può durare fino a 30 ms
+senza yield può impedire al task IDLE della CPU0 di essere eseguito e
+provocare il watchdog.
+
+Questo è un problema del metodo di acquisizione software, non una prova
+di un malfunzionamento del sensore.
+
+Per la versione successiva è preferibile: - usare un interrupt GPIO per
+rilevare i fronti ECHO; oppure - usare una periferica hardware adatta
+alla cattura temporale, se disponibile e conveniente; - usare un timer
+hardware ad alta risoluzione per i timestamp; - evitare loop di polling
+lunghi e senza yield; - mantenere timeout di sicurezza sia per il fronte
+di salita sia per quello di discesa.
+
+8. Conclusioni tecniche aggiornate
+
+La vecchia richiesta di 100 ECHO completi al secondo non è più un
+requisito.
+
+I test hanno mostrato che: - 50 ECHO/s sono stati ottenuti in modo
+regolare con TRIG periodico a 50 Hz; - nel test adattivo/sequenziale
+iniziale, senza una pausa di riarmo adeguata, si sono verificati molti
+timeout; - con 10 ms aggiuntivi dopo il completamento di ECHO si sono
+ottenuti circa 50 ECHO/s con il 100% di successo nel campione di 5
+secondi; - il tempo TRIG → completamento ECHO misurato è stato circa
+13,96 ms nelle condizioni di prova.
+
+Non è corretto concludere che il sensore abbia necessariamente un limite
+fisso di 50 Hz in ogni condizione: il risultato dipende anche dalla
+distanza del bersaglio, dall’ambiente, dalla logica interna del modulo e
+dalla strategia di trigger. La prova a 2 minuti proposta serve proprio a
+raccogliere una distribuzione temporale più affidabile.
+
+9. Nuova strategia: prova lunga e analisi dei delta
+
+Si propone una prova di 120 secondi con acquisizione adattiva e
+registrazione degli eventi.
+
+Per ogni ciclo registrare almeno: - timestamp del fronte TRIG (o
+timestamp immediatamente dopo l’impulso); - timestamp del fronte di
+salita ECHO; - timestamp del fronte di discesa ECHO; - esito: misura
+completa, timeout salita o timeout discesa; - numero progressivo della
+misura.
+
+Da questi dati calcolare: 1. delta_TRIG: intervallo tra due trigger
+consecutivi; 2. latenza_salita: tempo tra TRIG e fronte ECHO rising; 3.
+durata_ECHO: tempo tra ECHO rising e falling; 4. latenza_completamento:
+tempo tra TRIG e ECHO falling; 5. delta_ECHO: intervallo tra due fronti
+ECHO falling consecutivi; 6. tempo tra ECHO falling e TRIG successivo;
+7. percentuale di trigger con ECHO completo; 8. numero di timeout e
+distribuzione della loro durata.
+
+È importante registrare i timestamp dei singoli fronti, non soltanto
+medie e contatori. In questo modo si potranno ricostruire i delta e
+verificare se esistono gruppi, periodicità, tempi minimi o variazioni
+lente.
+
+Modalità di prova consigliata
+
+Eseguire inizialmente una prova con: - trigger immediatamente dopo il
+completamento ECHO; - nessun ritardo aggiuntivo intenzionale; - timeout
+sufficientemente ampio da non confondere una risposta lenta con una
+mancata risposta; - acquisizione tramite interrupt e timer; - durata 120
+secondi.
+
+Se la percentuale di risposte complete è bassa, ripetere la prova
+introducendo un piccolo intervallo di riarmo, per esempio 2, 5, 8 e 10
+ms dopo il fronte ECHO falling. Per confrontare correttamente le
+condizioni, mantenere invariati bersaglio, distanza, alimentazione e
+ambiente.
+
+L’analisi dovrà individuare il compromesso migliore tra: - latenza
+minima; - numero massimo di misure complete; - percentuale di
+successo; - regolarità dei delta.
+
+Non basta scegliere il valore con la frequenza media più alta se
+comporta molti timeout.
+
+10. Architettura del nuovo firmware
+
+Il nuovo main.c dovrebbe essere organizzato in questo modo:
+
+1.  Configurazione GPIO TRIG come uscita.
+2.  Configurazione GPIO ECHO come ingresso con interrupt su entrambi i
+    fronti.
+3.  Configurazione di un timer ad alta risoluzione.
+4.  Un task di misura che genera un impulso TRIG di circa 12 µs.
+5.  La ISR ECHO registra il timestamp e il livello del fronte, senza
+    fare elaborazioni pesanti.
+6.  Il task riconosce la misura completa quando ha ricevuto entrambi i
+    fronti.
+7.  Il task registra il record e decide quando inviare il trigger
+    successivo.
+8.  Un timeout controllato gestisce le misure incomplete.
+9.  Al termine dei 120 secondi, i dati vengono riepilogati o esportati
+    via UART.
+
+La ISR dovrebbe limitarsi a registrare timestamp, livello e
+identificazione dell’evento. Evitare printf, allocazioni dinamiche e
+calcoli complessi dentro l’interrupt.
+
+Per una prova di due minuti è possibile conservare i record in un buffer
+RAM statico e stamparli alla fine. Prima di scegliere la dimensione del
+buffer bisogna stimare il numero massimo di eventi: con frequenze
+dell’ordine di decine di misure al secondo, un buffer di alcune migliaia
+di record è già ampio; la dimensione esatta dipende dal formato del
+record.
+
+Pseudocodice del ciclo adattivo
+
+    for (;;) {
+        genera_trig_12us();
+
+        // La ISR registra i timestamp dei fronti ECHO.
+        // Il task attende una misura completa oppure il timeout.
+
+        if (echo_rising && echo_falling) {
+            salva_record_misura();
+            // Nessun delay aggiuntivo: prossimo TRIG appena possibile.
+        } else {
+            salva_record_timeout();
+            // Gestione controllata del timeout e nuovo tentativo.
+        }
+    }
+
+Questo è uno schema logico, non ancora il main.c definitivo. La
+sincronizzazione tra ISR e task dovrà essere implementata correttamente
+con primitive FreeRTOS/ESP-IDF sicure per interrupt.
+
+11. Codice e prove già effettuate: note di ricostruzione
+
+Nel corso della conversazione sono stati provati: - generazione
+periodica di TRIG; - conteggio dei fronti ECHO; - misura della durata
+HIGH di ECHO; - ciclo sequenziale TRIG → attesa ECHO rising → attesa
+ECHO falling; - timeout di 30 ms; - sweep di pause aggiuntive da 0, 2,
+5, 10, 15 e 20 ms.
+
+Il codice sorgente integrale delle versioni precedenti non è riportato
+qui come se fosse una copia esatta: questo documento ricostruisce la
+logica e i risultati disponibili nella conversazione. Il frammento
+pseudocodice sopra illustra il nuovo ciclo desiderato, ma non
+sostituisce il firmware completo.
+
+12. Prossimi passi operativi
+
+1.  Preparare un nuovo main.c per ESP-IDF 5.5.0 / PlatformIO con
+    interrupt GPIO ECHO e timestamp hardware.
+2.  Implementare un test di 120 secondi con trigger adattivo e nessun
+    delay aggiuntivo dopo una misura valida.
+3.  Salvare ogni evento in RAM con timestamp TRIG, ECHO rising, ECHO
+    falling ed esito.
+4.  Stampare a fine prova il riepilogo e, se possibile, i record grezzi
+    in formato CSV via seriale.
+5.  Analizzare i delta e la percentuale di successo.
+6.  Ripetere con pause aggiuntive controllate (ad esempio 2, 5, 8 e 10
+    ms) solo se la prova senza pausa presenta timeout.
+7.  Scegliere il ritardo minimo che garantisce una percentuale di misure
+    complete accettabile e una latenza bassa.
+
+13. Criterio di successo proposto
+
+Il nuovo criterio non è più “100 misure al secondo”. È:
+
+ottenere la minima latenza compatibile con una percentuale di misure
+complete stabile e sufficientemente alta.
+
+La soglia di successo (per esempio 99% o 99,9% di risposte complete)
+andrà concordata in base alle esigenze del progetto. La prova di 120
+secondi fornirà una base quantitativa per scegliere il tempo di riarmo.
