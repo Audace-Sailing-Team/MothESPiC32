@@ -17,8 +17,8 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#define WIFI_SSID      "Mattias S25 "
-#define WIFI_PASS      "fuernerqxtghyh5"
+#define WIFI_SSID      "SSID"
+#define WIFI_PASS      "PWD"
 #define SERVER_IP      "10.206.37.170"  // IP of the machine running router.py
 #define SERVER_PORT    65432
 
