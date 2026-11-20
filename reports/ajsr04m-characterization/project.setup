@@ -1,0 +1,69 @@
+#+options: toc:t num:t title:t author:t email:nil timestamp:nil tags:nil h:3 \n:nil @:t ::t |:t ^:{} _:{} *:t tex:t latex:t broken-links:t
+#+property: header-args :comments yes :eval no-export :mkdirp yes :results verbatim replace :noweb no-export
+#+property: header-args:sh :exports both :shebang #!/bin/bash
+#+property: header-args:python :exports results :shebang "#!/usr/bin/env python" :results output :session :async :noweb yes
+#+select_tags: only
+#+exclude_tags: noexport
+#+startup: overview
+
+#+latex_class: article
+#+latex_class_options: [11pt,a4paper]
+#+latex_header: \usepackage[OT1]{fontenc}
+#+latex_header: \usepackage{pmboxdraw}  % for unicode symbls in verbatim
+#+latex_header: \linespread{1.05}
+#+latex_header: \textwidth=16cm
+#+latex_header: \textheight=24cm
+#+latex_header: \hoffset=-1.8cm
+#+latex_header: \voffset=-1.5cm
+#+latex_header: \parindent=0ex
+#+latex_header: \parskip=1ex
+#+latex_header: \usepackage{fancyhdr}
+#+latex_header: \usepackage{booktabs}
+#+latex_header: \usepackage{mathptmx}
+#+latex_header: \usepackage[font={small,it},labelfont=bf]{caption}
+#+latex_header: \usepackage[dvipsnames]{xcolor}
+#+latex_header: \usepackage{color}
+#+latex_header: \definecolor{deepblue}{rgb}{0,0,0.7}
+#+latex_header: \definecolor{deepred}{rgb}{0.6,0,0}
+#+latex_header: \definecolor{deepgreen}{rgb}{0,0.5,0}
+#+latex_header: \definecolor{deepgray}{rgb}{0.6,0.6,0.6}
+#+latex_header: \usepackage{microtype}
+#+latex_header: % see for bold text: https://tex.stackexchange.com/questions/33039/using-ttfamily-with-bfseries-or-how-to-enable-bold-in-fixed-width-font
+#+latex_header: \usepackage{listings}
+#+latex_header: \lstset{basicstyle=\ttfamily\footnotesize,columns=fullflexible,breaklines=true,showstringspaces=false,language=Python}
+#+latex_header: \lstset{commentstyle=\color{deepgray},keywordstyle=\bfseries\color{deepblue},stringstyle=\color{deepred}}
+#+latex_header: % \lstset{emph={MyClass,__init__},emphstyle=\bfseries\color{deepred}}  % you can only manually emphasize class and function names
+#+latex_header: \lstset{frame=l,framexleftmargin=5pt,framerule=1pt,rulecolor=\color{deepgray}}
+#+latex_header: \usepackage{enumitem}
+#+latex_header: \setlist{itemsep=0pt,parsep=0pt,topsep=2pt,leftmargin=*,labelindent=4pt}
+#+latex_header: \renewcommand{\labelitemi}{--}
+#+latex_header: \makeatletter\def\verbatim@font{\color{Gray}\ttfamily\footnotesize}\makeatother  % grey font in verbatim
+#+latex_header: \usepackage{titling}
+#+latex_header: \usepackage{float}
+#+latex_header: \floatplacement{figure}{H}
+#+latex_header: \setlength{\droptitle}{-60pt}
+#+latex_header: \pretitle{\begin{center}\bfseries\Large\vskip-30pt}
+#+latex_header: \posttitle{\par\end{center}}
+#+latex_header: \predate{\begin{center}\vskip-10pt}
+#+latex_header: \postdate{\par}
+#+latex_header: \hypersetup{
+#+latex_header:     colorlinks,%
+#+latex_header:     citecolor=deepblue,%
+#+latex_header:     filecolor=black,%
+#+latex_header:     linkcolor=deepblue,%
+#+latex_header:     urlcolor=deepblue
+#+latex_header: }
+#+latex_header: \usepackage{etoolbox}
+#+latex_header: \makeatletter
+#+latex_header: \preto{\@verbatim}{\topsep=-40pt \partopsep=40pt }
+#+latex_header: \makeatother
+#+latex_header: \usepackage{tocloft}
+#+latex_header: \setlength{\cftbeforesecskip}{6pt}
+#+latex_header: \pagestyle{fancy}
+#+latex_header: \fancyhead{}
+#+latex_header: \fancyhead[R]{\textbf{\thepage}}
+#+latex_header: \fancyhead[L]{\textbf{\nouppercase{\leftmark}}}
+#+latex_header: \fancyfoot{}
+#+latex_header: \renewcommand{\headrulewidth}{0.4pt}
+#+latex_header: \renewcommand{\footrulewidth}{0.0pt}
+#+bind: org-latex-image-default-width ".7\\linewidth"

@@ -1,0 +1,534 @@
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\usepackage[OT1]{fontenc}
+\usepackage{pmboxdraw}  % for unicode symbls in verbatim
+\linespread{1.05}
+\textwidth=16cm
+\textheight=24cm
+\hoffset=-1.8cm
+\voffset=-1.5cm
+\parindent=0ex
+\parskip=1ex
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{mathptmx}
+\usepackage[font={small,it},labelfont=bf]{caption}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{color}
+\definecolor{deepblue}{rgb}{0,0,0.7}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{deepgray}{rgb}{0.6,0.6,0.6}
+\usepackage{microtype}
+% see for bold text: https://tex.stackexchange.com/questions/33039/using-ttfamily-with-bfseries-or-how-to-enable-bold-in-fixed-width-font
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\footnotesize,columns=fullflexible,breaklines=true,showstringspaces=false,language=Python}
+\lstset{commentstyle=\color{deepgray},keywordstyle=\bfseries\color{deepblue},stringstyle=\color{deepred}}
+% \lstset{emph={MyClass,__init__},emphstyle=\bfseries\color{deepred}}  % you can only manually emphasize class and function names
+\lstset{frame=l,framexleftmargin=5pt,framerule=1pt,rulecolor=\color{deepgray}}
+\usepackage{enumitem}
+\setlist{itemsep=0pt,parsep=0pt,topsep=2pt,leftmargin=*,labelindent=4pt}
+\renewcommand{\labelitemi}{--}
+\makeatletter\def\verbatim@font{\color{Gray}\ttfamily\footnotesize}\makeatother  % grey font in verbatim
+\usepackage{titling}
+\usepackage{float}
+\floatplacement{figure}{H}
+\setlength{\droptitle}{-60pt}
+\pretitle{\begin{center}\bfseries\Large\vskip-30pt}
+\posttitle{\par\end{center}}
+\predate{\begin{center}\vskip-10pt}
+\postdate{\par}
+\hypersetup{
+colorlinks,%
+citecolor=deepblue,%
+filecolor=black,%
+linkcolor=deepblue,%
+urlcolor=deepblue
+}
+\usepackage{etoolbox}
+\makeatletter
+\preto{\@verbatim}{\topsep=-40pt \partopsep=40pt }
+\makeatother
+\usepackage{tocloft}
+\setlength{\cftbeforesecskip}{6pt}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[R]{\textbf{\thepage}}
+\fancyhead[L]{\textbf{\nouppercase{\leftmark}}}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.0pt}
+\date{12 November 2026}
+\title{AJ-SR04M ultrasonic ranging below the specified minimum distance\\\medskip
+\large Characterization of response, variability, and acquisition failures}
+\hypersetup{
+ pdfauthor={},
+ pdftitle={AJ-SR04M ultrasonic ranging below the specified minimum distance},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 30.1 (Org mode 9.7.34)}, 
+ pdflang={English}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\begin{abstract}
+Eight serial-log recordings were examined to characterize the AJ-SR04M ultrasonic sensor both inside and around its specified 200 mm blind zone. The principal observables are the echo-pulse duration, reported distance, and acquisition status. A total of 44,373 complete events were recovered, including 30,658 readings marked valid by the acquisition software.  Some sub-minimum placements return remarkably stable but incorrect ranges, whereas two explicitly disturbed recordings change between several apparent distance regimes. The reported distance is exactly reproducible from the logged echo duration using a 343 m/s speed-of-sound conversion. The results are consistent with a combination of near-field acoustic limitations, selection of later echoes, and acquisition-timing effects; the logs alone do not identify which mechanism is responsible for each abnormal reading.
+\end{abstract}
+\section{Introduction}
+\label{sec:org6872284}
+The AJ-SR04M is an ultrasound distance measuring transducer, which operates nominally near 40 kHz and is documented with a 20 cm blind zone. \footnote{\emph{Arduino Distance Measuring Transducer Sensor, Model AJ-SR04M,
+User Manual}. Specifies a 20 cm blind area, 40 kHz transmit pulse, and
+pulse-width mode. \href{https://manuals.plus/m/4f3549b5e4ee5c38ece4f1568cabf9447d5f667b07a22233d50c6c45a6bbcbf0}{Online manual}.\label{orga5a5be2}} The purpose of this experiment is to determine how the sensor behaves below its manufacturer-reported minimum measurement distance and to assess whether its output can be treated as a useful height estimate.
+\section{Experimental setup}
+\label{sec:org1198f9d}
+The AJ-SR04M ultrasonic sensor was attached with adhesive tape to one end of a bamboo pole. The pole was supported by a ligature near its midpoint, allowing it to pivot, and the sensor height above the target surface was adjusted by raising or lowering the opposite, free end of the pole. This arrangement minimized interference from nearby objects by keeping the acoustic path between the sensor and the ground unobstructed. The distance between the sensor and the target was measured manually using a ruler placed alongside the sensor.
+
+This arrangement introduced several sources of experimental uncertainty, including sensor inclination, parallax while reading the ruler visually, and mechanical instability. Therefore, the reference distances should be regarded as approximate.
+\subsection{Measurement uncertainty}
+\label{sec:org4b0da83}
+The reference heights were measured using a 200 mm ruler graduated in 1 mm increments. We estimate the measurement uncertainty from ruler resolution, parallax, and ruler inclination.  Sensor inclination is considered separately because it affects the acoustic measurement.
+
+To conservatively estimate the measurement uncertainty, we assume
+\begin{itemize}
+\item a ruler rounding error of ±0.5 mm
+\item a maximum parallax angle of 30 degrees, with an assumed separation of 5 mm between the ruler scale and measurement point
+\item a ruler inclination of 5 degrees from vertical at most
+\item a sensor inclination of 10 degrees from vertical at most, accounting
+for manual alignment during acquisition.
+\end{itemize}
+
+These bounds are estimates based on the experimental procedure, and uniform distributions are assumed for the unknown errors and angles.
+\subsubsection{Ruler resolution}
+\label{sec:org30fbc71}
+The standard uncertainty due to rounding to the nearest millimetre is
+
+\[
+u_{\mathrm{res}} = \frac{0.5}{\sqrt{3}}
+                = 0.29\,\mathrm{mm}.
+\]
+\subsubsection{Parallax}
+\label{sec:org4b94de5}
+For a separation \(s\) between the ruler scale and measurement point, and a viewing angle \(\alpha\) relative to the normal to the scale plane, the apparent displacement is approximated by
+
+\[
+\delta h_{\mathrm{par}} = s\tan\alpha.
+\]
+
+Assuming \(s=5\,\mathrm{mm}\) and a uniformly distributed angle \(\alpha\in[-30^\circ,30^\circ]\), the standard uncertainty is
+
+\[
+u_{\mathrm{par}} =
+s\sqrt{\frac{\tan A-A}{A}}
+\simeq 1.60\,\mathrm{mm},
+\]
+
+where \(A=30^\circ\) is expressed in radians.
+\subsubsection{Ruler inclination}
+\label{sec:orgf6e39d2}
+If the ruler makes an angle \(\theta\) with the vertical, the vertical height corresponding to a reading \(r\) is
+
+\[
+h=r\cos\theta.
+\]
+
+Assuming \(\theta\) is uniformly distributed between -5 and +5 degrees, the standard uncertainty associated with the unknown inclination is
+
+\[
+u_{\mathrm{incl}} \simeq 0.001135r.
+\]
+
+At a reading of 200 mm, this corresponds to approximately 0.23 mm. The inclination also introduces a positive mean overestimate of the vertical height, approximately \(0.001269r\), under the adopted angular distribution.
+\subsubsection{Sensor inclination}
+\label{sec:org7239d74}
+The sensor was aligned approximately parallel to the target surface by hand. We assume a maximum residual inclination of 10 degrees.
+
+Under an idealized axial acoustic-path model, the distance associated with a vertical separation \(h\) and inclination \(\phi\) is
+
+\[
+d=\frac{h}{\cos\phi}.
+\]
+
+For a uniformly distributed inclination between -10 and +10 degrees, this produces a standard deviation in the geometric path length of approximately
+
+\[
+u_{\mathrm{sensor}}(h)=0.00459h.
+\]
+
+The same model predicts a positive mean geometric bias of approximately \(0.00512h\).
+\subsubsection{Combined reference uncertainty}
+\label{sec:org91a1538}
+Assuming independent contributions, the combined standard uncertainty is
+
+\[
+u_h(r)=\sqrt{
+u_{\mathrm{res}}^2+
+u_{\mathrm{par}}^2+
+u_{\mathrm{incl}}(r)^2
+}.
+\]
+
+Over the investigated height range, this varies approximately between 1.63 and 1.66 mm. We adopt the conservatively rounded estimate
+
+\[
+u_h=1.7\,\mathrm{mm}.
+\]
+
+Including the spread associated with sensor inclination in the idealized axial-path model, the comparison uncertainty is
+
+\[
+u_{\mathrm{comp}}(h)=
+\sqrt{u_h(h)^2+u_{\mathrm{sensor}}(h)^2}.
+\]
+
+\begin{center}
+\begin{tabular}{rrr}
+Height [mm] & Reference uncertainty [mm] & Comparison uncertainty [mm]\\
+\hline
+69 & 1.63 & 1.66\\
+108 & 1.63 & 1.71\\
+128 & 1.63 & 1.74\\
+131 & 1.63 & 1.74\\
+170 & 1.64 & 1.82\\
+188 & 1.64 & 1.85\\
+201 & 1.64 & 1.88\\
+283 & 1.66 & 2.11\\
+\end{tabular}
+\end{center}
+\subsection{Data acquisition setup}
+\label{sec:org1baac99}
+The sensor was connected to an ESP32 microcontroller and triggered at a frequency of 50 Hz. Measurements were transmitted through the ESP32 serial interface and captured in text files for subsequent analysis.  Each logged measurement contained the echo pulse duration (\texttt{ECHO}, in microseconds), the calculated distance (\texttt{DISTANZA}, in millimetres), and a status code (\texttt{STATUS}).
+
+Eight recordings were collected, corresponding to the nominal heights listed above. The recordings at 108 and 128 mm additionally involved changes in sensor position during acquisition, as indicated by their filenames. These measurements may therefore contain transient behaviour associated with the movement of the pole.
+\section{Theoretical framework}
+\label{sec:orgdb231d6}
+\subsection{Time-of-flight measurement}
+\label{sec:org5a4b4ba}
+Ultrasonic distance measurement relies on the propagation and reflection of acoustic waves. Following a trigger signal, the sensor emits a short ultrasonic pulse at a selected frequency; the pulse propagates through air, interacts with the target surface, and part of the acoustic energy may return to the transducer. The elapsed time between transmission and reception provides an estimate of the distance travelled by the wave.
+
+In the ideal case of a flat reflecting surface perpendicular to the acoustic axis, the wave travels twice the sensor-to-target distance \(h\). Assuming a constant speed of sound \(c\), the round-trip time of flight is
+
+\[
+\tau_0(h)=\frac{2h}{c}.
+\]
+
+Solving for the distance gives
+
+\[
+h=\frac{c\tau_0}{2}.
+\]
+
+The speed of sound depends primarily on air temperature under ordinary laboratory conditions. For this analysis, we assume \(c=343\,\mathrm{m\,s^{-1}}\), approximately corresponding to dry air at 20 degrees Celsius.
+
+Under these assumptions, the expected round-trip propagation time for a distance of 200 mm is approximately 1166 microseconds; at 100 mm, it is approximately 583 microseconds.
+\subsection{Physical limitations at short distances}
+\label{sec:orgeeeb277}
+The ideal time-of-flight relationship assumes that the sensor can identify the echo associated with the target. In practice, the transmitted pulse, the mechanical response of the transducer, and the received acoustic signal overlap in time.
+
+An ultrasonic transducer behaves approximately as a damped resonant system. After excitation by an electrical pulse, its mechanical oscillations persist for some time before decaying. This phenomenon, known as \emph{ring-down}, produces a residual acoustic and electrical response following transmission.
+
+At short distances, the returning echo may arrive while the transducer is still oscillating or while the receiver is recovering from transmission. The target echo can consequently be obscured by the residual response. Depending on the receiver design, an initial time interval may also be excluded from echo detection to prevent false triggering.
+
+These mechanisms limit the minimum time of flight that can be reliably resolved and consequently the minimum measurable distance. If the effective receiver recovery time is \(\tau_{\mathrm{dead}}\), the associated distance scale is
+
+\[
+h_{\mathrm{dead}}=\frac{c\tau_{\mathrm{dead}}}{2},
+\]
+
+where \(\tau_{\mathrm{dead}}\) represents the combined effect of
+transducer recovery and any electronic detection delay. Its value
+depends on the particular sensor implementation.
+
+The received signal may also contain contributions from multiple acoustic paths. Reflections from surrounding surfaces can reach the receiver after travelling distances different from the direct sensor-to-target path. The receiver must identify an arrival time from the resulting signal, potentially through amplitude thresholds or other internal signal-processing algorithms.
+
+Consequently, the measured time of flight depends on both acoustic propagation and the operation of the echo-detection electronics.
+\subsection{Statistical model of the measurement}
+\label{sec:org764bb9d}
+The acquisition process has two distinct outcomes: either a measurement is successfully returned or the acquisition fails. We introduce a variable \(S\) describing this outcome and define the probability of successful detection as
+
+\[
+p_{\mathrm{valid}}(h)=P(S=\mathrm{valid}\mid h).
+\]
+
+The probability generally depends on additional experimental parameters, including sensor orientation, target reflectivity, and acquisition timing; these dependencies are suppressed in the notation for simplicity.
+
+Given \(N\) acquisitions at a fixed height \(h\), an experimental estimate is
+
+\[
+\hat p_{\mathrm{valid}}(h)=\frac{N_{\mathrm{valid}}}{N},
+\]
+
+where \(N_{\mathrm{valid}}\) is the number of successful acquisitions.
+
+For a successful measurement, the reported echo time may fluctuate because of electronic noise, timing resolution, variations in received signal amplitude, and the operation of the echo-detection algorithm. If the same echo is consistently detected under stationary conditions, the measured pulse duration can be represented as
+
+\[
+T=\mu_T+\epsilon,
+\]
+
+where \(\mu_T\) is its expected value and \(\epsilon\) is a random fluctuation with zero mean. A Gaussian approximation gives
+
+\[
+T\sim\mathcal N(\mu_T,\sigma_T^2),
+\]
+
+where \(\sigma_T\) characterizes measurement repeatability.
+
+If multiple echo-detection regimes are possible, the observed distribution may contain several distinct groups of measurements.  A phenomenological model for this situation is a Gaussian mixture
+
+\[
+p(T\mid S=\mathrm{valid},h)
+=
+\sum_{k=1}^{K}
+\pi_k(h)\,
+\mathcal N(T;\mu_k,\sigma_k^2),
+\]
+
+where \(K\) denotes the number of statistical components, \(\mu_k\) and \(\sigma_k\) describe the characteristic echo time and fluctuations within component \(k\), and \(\pi_k(h)\) is the probability of observing that component, conditional on a successful acquisition. The weights satisfy
+
+\[
+\sum_{k=1}^{K}\pi_k(h)=1.
+\]
+
+The mixture model allows the total variability to be decomposed into fluctuations within individual components and variations associated with the occurrence of different components
+
+\[
+\operatorname{Var}(T) = \sum_{k=1}^{K}\pi_k\sigma_k^2 + \sum_{k=1}^{K}\pi_k(\mu_k-\bar T)^2,
+\]
+
+where
+
+\[
+\bar T=\sum_{k=1}^{K}\pi_k\mu_k.
+\]
+
+The first term represents variability within the individual measurement regimes; the second accounts for the separation between their characteristic values.
+
+This decomposition motivates a quantitative check of how much of the recorded scatter arises from the separation between response groups. If the between-component term dominates, averaging all the readings yields a poor measure of the short-term repeatability of any one regime.
+
+The number of mixture components is assessed using the Bayesian information criterion (BIC),
+
+\[
+\mathrm{BIC}(K)=-2\log\hat L_K+(3K-1)\log N,
+\]
+
+where \(\hat L_K\) is the maximized likelihood for a one-dimensional Gaussian mixture with \(K\) components, \(N\) is the number of fitted pulse durations, and \(3K-1\) counts the component means, variances, and independent weights. A smaller BIC favours the model after penalizing additional parameters. This comparison assumes independent observations drawn from a stationary distribution; serial correlation, position changes, and quantization limit its interpretation for the present measurements. The method serves to locate descriptive response groups and estimate their relative occupancies. Component counts must not be interpreted as the number of physical acoustic paths. \footnote{scikit-learn documentation, \emph{Gaussian Mixture Model Selection}. Describes selecting model complexity by minimizing BIC. \href{https://scikit-learn.org/stable/auto\_examples/mixture/plot\_gmm\_selection.html}{Documentation}.}
+\section{Experimental results}
+\label{sec:org66fa5d2}
+For valid distances \(d_j\) within a recording, we compute the arithmetic mean \(\bar d\), sample standard deviation \(s\), median, empirical 5th and 95th percentiles, mode, mean bias relative to the nominal height, and RMSE.
+
+\begin{table}[H]
+\caption{Acquisition outcomes at each nominal height.}
+\centering
+\begin{tabular}{rrrrrr}
+Nominal (mm) & Parsed & Valid & No echo & Stuck & Valid (\%)\\
+\hline
+69 & 3753 & 1993 & 1760 & 0 & 53.1\\
+108 & 8669 & 6759 & 1731 & 179 & 78.0\\
+128 & 8172 & 6785 & 1203 & 184 & 83.0\\
+131 & 5313 & 5313 & 0 & 0 & 100.0\\
+170 & 5659 & 3002 & 2657 & 0 & 53.0\\
+188 & 4664 & 2474 & 2190 & 0 & 53.0\\
+201 & 4393 & 2332 & 2061 & 0 & 53.1\\
+283 & 3750 & 2000 & 1750 & 0 & 53.3\\
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Statistics of valid distance measurements at each nominal height. Bias is calculated as the difference between the mean reported distance and the nominal reference height}
+\centering
+\begin{tabular}{rrrrr}
+Nominal (mm) & Mean (mm) & SD (mm) & Median (mm) & Bias (mm)\\
+\hline
+69 & 202.63 & 0.49 & 203.0 & 133.63\\
+108 & 281.41 & 87.72 & 257.0 & 173.41\\
+128 & 259.60 & 83.10 & 221.0 & 131.60\\
+131 & 283.41 & 0.93 & 283.0 & 152.41\\
+170 & 203.63 & 115.14 & 202.0 & 33.63\\
+188 & 201.68 & 0.82 & 202.0 & 13.68\\
+201 & 205.55 & 0.52 & 206.0 & 4.55\\
+283 & 284.98 & 0.18 & 285.0 & 1.98\\
+\end{tabular}
+\end{table}
+
+The 170 mm run illustrates the inadequacy of a mean/standard deviation alone: its 115.14 mm sample standard deviation is driven by a single valid-status value of 6510 mm, while the median is 202 mm. Without that one event, the remaining 3001 valid readings have a mean of 201.53 mm and a sample SD of approximately 0.50 mm.
+
+At 131 mm, readings cluster near 283 mm despite a nominal height of 131 mm; at 283 mm the mean lies close to the reference height. Small spread therefore does not imply small bias.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{figures/height_statistics.png}
+\caption{\label{fig:org518c7cd}Mean reported distance with one sample standard deviation (blue circles) and median distance with a 95\% moving-block-bootstrap interval (orange squares). Both have horizontal error bars representing estimated standard uncertainties of the ruler measurements. The shaded region denotes the specified blind zone. Confidence intervals collapsing to a single integer-millimetre value are obscured by their markers. Full-run standard deviations include all valid events, including the extreme reading at 170 mm.}
+\end{figure}
+
+Below the specified 200 mm threshold, the median response varies non-monotonically with nominal height, with several configurations returning a distance far greater than the measured separation. The 283 mm configuration, the only one clearly above the threshold, lies close to the ideal relationship. More reference heights are required immediately around 200 mm, throughout the region above it, and near the apparent distance concentrations around 280 and 320 mm to establish whether these features are reproducible.
+
+The median error bars in Figure \ref{fig:org518c7cd} are 95\% percentile intervals obtained by resampling contiguous blocks of 50 parsed records, including the failure events, with 700 bootstrap replicates. This partially preserves temporal dependence. Six of the eight intervals collapse to the same reported integer median; the intervals at 108 and 128 mm are 256--315 mm and 220--222 mm, respectively. These intervals describe the sensitivity of a pooled run median to the recorded time sequence; the deliberately moving runs cannot be interpreted as repetitions at one fixed height. Ruler uncertainty is represented separately by the horizontal error bars.
+\subsection{Distribution shape and temporal evolution}
+\label{sec:orgd5c0657}
+For four nominally stationary runs (69, 170, 201 and 283 mm), most
+successful echo durations occupy only a few integer-microsecond values.
+Figure \ref{fig:org9413a5b} therefore displays their observed
+frequencies directly. A smooth Gaussian shape cannot be assessed
+reliably from so few distinct time values, regardless of the number
+of repeated samples.
+
+The 131 and 188 mm recordings contain separate, smaller groups near
+288 and 205 mm, respectively. Two-component Gaussian mixtures summarize
+the locations and relative occupancies of these groups. Their estimated
+centres are marked by dashed lines, without overlaying a smooth
+density that would fit the quantized frequencies poorly. The secondary groups
+account for about 4.2\% and 6.7\% of successful observations. Even there,
+the fitted components summarize group occupancy rather than the detailed shape of the recorded frequencies.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{figures/distributions_stable.png}
+\caption{\label{fig:org9413a5b}Observed pulse durations in six nominally stationary recordings, using the native 1 µs resolution. Dashed markers at 131 and 188 mm locate the centres of secondary response groups estimated from two-component mixtures. No Gaussian density curves are superimposed on these sharply quantized observations.}
+\end{figure}
+
+The 108 and 128 mm recordings contain several widely separated responses
+and known changes in sensor position. We fitted Gaussian mixtures with
+one to six components to the valid pulse durations up to 450 mm.
+The Bayesian information criterion (BIC) decreases through six
+components in both recordings; the upper bound was imposed for this
+exploratory analysis. Figure \ref{fig:org0427767} compares
+these distributions with their temporal evolution. A weaker 284--294 mm
+group in the 128 mm run contains 208 of 6785 valid readings (3.1\%),
+but is absorbed by a broad fitted component.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{figures/disturbed_time_distributions.png}
+\caption{\label{fig:org0427767}Disturbed recordings at nominal 108 mm (top) and 128 mm (bottom). Time histories appear beside observed distance histograms and their mixture predictions. The shaded 284--294 mm interval identifies the weaker group at 128 mm. Fifteen valid readings above 450 mm are excluded from these plots and fits, but retained in the full descriptive statistics.}
+\end{figure}
+
+The models also allow the observed scatter to be separated into
+fluctuations within response groups and changes between their mean
+values. The table summarizes this decomposition alongside the most
+frequent component in each multimodal recording. All component
+parameters and fit diagnostics are saved in \texttt{results/}.
+
+\begin{table}[H]
+\caption{Main response component and fraction of fitted variance associated with differences between components. Weights refer to successful readings within the fit range; the nominal height changed during the 108 and 128 mm recordings.}
+\centering
+\begin{tabular}{rrrrr}
+Nominal (mm) & Components & Dominant (mm) & Weight (\%) & Between variance (\%)\\
+\hline
+108 & 6 & 321.7 & 36.1 & 94.3\\
+128 & 6 & 202.5 & 37.4 & 94.0\\
+131 & 2 & 283.5 & 95.8 & 73.6\\
+188 & 2 & 201.9 & 93.3 & 90.4\\
+\end{tabular}
+\end{table}
+
+For the moving recordings, approximately 94\% of the fitted variance
+arises from separation between response groups. The corresponding
+fractions at 131 and 188 mm are approximately 74\% and 90\%. Thus,
+a large pooled standard deviation may conceal relatively concentrated
+readings within individual regimes. These percentages describe the
+fitted mixtures and do not identify distinct physical reflection paths.
+\subsection{Response of the dominant components}
+\label{sec:org4f4354a}
+Figure \ref{fig:orgc93dca8} compares the most frequent response
+group at each nominal height. Faint symbols indicate less frequent
+groups; small fixed-size markers keep the individual values visible.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{figures/dominant_components.png}
+\caption{\label{fig:orgc93dca8}Dominant apparent ranges and less frequent response groups against nominal ruler height. Diamonds show the largest-weight group, with horizontal reference-height uncertainties and vertical within-group standard deviations. Orange diamonds denote the moving recordings, whose nominal heights cannot be associated with every observation.}
+\end{figure}
+
+The dominant apparent ranges remain non-monotonic below 200 mm:
+approximately 202 mm at nominal 69, 128, 170 and 188 mm, around
+283.5 mm at 131 mm, and around 321.7 mm in the moving 108 mm run.
+At present, these points do not establish a usable short-range
+calibration curve.
+\subsection{Acquisition status and apparent reliability}
+\label{sec:org73c8744}
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{figures/status_rates.png}
+\caption{\label{fig:orgb0b3cb0}Percentages of successfully parsed events by status.}
+\end{figure}
+
+The recordings at 69, 170, 188, 201, and 283 mm all have very similar valid-event fractions (approximately 53\%). Conversely, the 131 mm log contains only valid events. Inspection of log time increments shows periods with valid entries roughly 20 ms apart and other periods alternating failed and valid entries. That repeated pattern across widely separated heights strongly motivates a check of the acquisition routine, trigger spacing, blocking behavior, and logging policy.  A claim that the acoustic sensor intrinsically has a 47\% failure probability would not be justified.
+\section{Interpretation and discussion}
+\label{sec:org4ab64e6}
+
+\subsection{Near-range acoustic limitations}
+\label{sec:org89edec4}
+The AJ-SR04M manual specifies a 20 cm blind zone for pulse-width mode, with a 40 kHz transmitted acoustic burst. \textsuperscript{\ref{orga5a5be2}} A pulse-echo probe that uses one transducer for both transmission and reception remains mechanically excited after the drive pulse ends. This \emph{ring-down} can mask or corrupt echoes from sufficiently near targets; the minimum range is also affected by excitation duration, signal processing and detection thresholds. \footnote{Texas Instruments, \emph{Ultrasonic Sensing Basics},
+section 2.8, Minimum Detection Range. Explains the blind zone arising
+from mechanical ringing in a single transmit/receive transducer.
+\href{https://www.ti.com/lit/an/slaa907d/slaa907d.pdf}{Application note}. See also
+\href{https://pmc.ncbi.nlm.nih.gov/articles/PMC9025471/}{Review of Ultrasonic Ranging Methods and Their Current Challenges}.} These are established physical mechanisms, but they do not alone predict the exact wrong distances seen in the supplied recordings.
+
+The observed approximately 201–203 mm plateau at the nominal heights 69, 170 and 188 mm is consistent with an effective detection floor near the specified blind-zone boundary. The corresponding dominant ECHO durations are approximately 1184, 1178 and 1178 microseconds, compared with ideal direct-return times of about 402, 991 and 1096 microseconds, respectively. Their close agreement in reported timing despite markedly different nominal heights motivates examination of a minimum detectable echo time. Three different mechanisms could produce superficially similar output: an explicit minimum-range clamp in firmware, a threshold crossing near the end of receiver blanking/ring-down, or selection of a later reflection once the true near echo has been rejected. These possibilities cannot be distinguished from distance and pulse-width logs alone.
+\subsection{Stable false ranges and multiple reflections}
+\label{sec:org9f4d308}
+At nominal 131 mm, the sensor repeatedly reports approximately 283 mm, whereas a genuinely placed target at 283 mm also produces a reading near 285 mm. The dominant 131 mm pulse duration is approximately 1652 microseconds, compared with the ideal direct-return time of about 764 microseconds; its delay greatly exceeds the integer-distance conversion step. In the 108 and 128 mm files, the preferred range shifts among several values, including concentrations around 202, 221, 255, 283, 321, and 349 mm. Echoes returning through longer paths, beam reflections, or thresholds acting on a ringing waveform could contribute to such behavior. The pole-mounted arrangement was chosen to keep the direct sensor-to-ground path clear of nearby objects. Reflections involving the ground outside the nominal beam axis, the mounting apparatus, or other surfaces remain possible, although the experimental geometry provides no direct evidence for any particular secondary path. Deliberate changes of the surroundings and sensor orientation would help test these explanations.
+\subsection{Firmware, acquisition rate and status handling}
+\label{sec:orge4b379e}
+\subsubsection{From time of flight to distance}
+\label{sec:org0a567d6}
+The observed relation \(D_{\mathrm{mm}}=\lfloor0.1715T_{\mu s}\rfloor\)
+corresponds to a fixed speed-of-sound factor of 343 m/s. The logs do
+not establish whether this constant originates in the ESP32 firmware
+or another acquisition layer. Because the actual air temperature was
+unrecorded, some conversion bias is expected. Using
+\(c(T_{\mathrm C})\simeq331.45+0.607T_{\mathrm C}\) in m/s, an ideal
+measurement at 200 mm would exhibit biases of about +1.44 mm at
+15 degrees Celsius and -2.09 mm at 25 degrees Celsius. These effects
+are small compared with the largest short-range errors. The firmware
+should be checked for the origin of the conversion constant and any
+temperature compensation. \footnote{Review of Ultrasonic Ranging Methods and Their Current Challenges,
+section on sound-speed dependence on temperature. \href{https://pmc.ncbi.nlm.nih.gov/articles/PMC9025471/}{Open-access review}.}
+\subsubsection{Success rate}
+\label{sec:orgb0351eb}
+Repeated near-53\% success rates and alternating errors are difficult to attribute to target distance alone. A plausible hypothesis is that some triggers occur before the sensor or the acquisition state machine is ready, or that the software alternates between blocking/timeouts and successful reads. Some distributor guidance advises at least 50 ms between ranging attempts so that earlier echoes decay. \footnote{Zaitronics, \emph{JSN-SR04T / AJ-SR04M Waterproof Ultrasonic Sensor Module},
+usage notes; recommends allowing at least 50 ms between measurements.
+\href{https://zaitronics.com.au/collections/distance-proximity-sensors/products/jsn-sr04t-aj-sr04m-waterproof-ultrasonic-distance-sensor}{Product notes}. This is practical guidance for a module family, not a
+verified measurement of the exact unit under test.} The present logs do not provide actual trigger edges and cannot prove that the commanded trigger interval equals the time between printed records. Both should be measured before changing the scheduler.
+\subsection{Adequacy and limits of the stochastic model}
+\label{sec:orgd2b9d1a}
+The status counts, empirical echo-time distributions and fitted mixtures
+provide complementary measures of detection reliability and variability.
+The mixture variance decomposition shows why a pooled standard deviation
+can be misleading when the sensor switches between distinct outputs.
+
+The Gaussian components are descriptive approximations. The limited
+integer-microsecond support prevents reliable assessment of a smooth
+noise distribution in the narrow recordings, while the moving recordings
+violate the stationary-sample assumption underlying standard BIC
+selection. A decreasing BIC at the six-component limit leaves further
+statistical groups unresolved. Serial correlation also makes the
+number of logged events larger than the number of independent
+observations. The small secondary groups and the dominant responses
+should therefore be tested by repeated fixed-height measurements
+before assigning a physical cause or attempting calibration.
+\section{Conclusions}
+\label{sec:orgde04e85}
+The sensor exhibited a non-monotonic response within its specified 200 mm blind zone. Some placements yielded repeatable apparent ranges near 202 mm, while the 131 mm placement yielded approximately 283 mm.  The two moving recordings contained several distinct response groups; the only clearly above-threshold point, 283 mm, was close to the expected distance.
+
+The narrow, digitally quantized echo-time distributions do not support precise claims about a continuous Gaussian noise law. The mixtures are useful for identifying secondary response groups and quantifying how much observed variability is associated with switching between them.  Even the most frequent components do not establish a reliable height calibration below 200 mm.
+\subsection{Possible developements}
+\label{sec:org983095b}
+Further work should prioritize repeatable fixed-height and fixed-orientation measurements, more points around and above 200 mm, a trigger-frequency sweep, a firmware timing check, and ambient temperature measurements.
+\section*{LLM usage disclosure}
+\label{sec:org3a4aa38}
+Large language models (LLM) were used to assist with the drafting and revision of this report, the development and debugging of the data-analysis code, and the presentation of results. The experimental design, methodological decisions, analysis of results, and scientific interpretation were conducted by the author, who critically reviewed, verified, and refined all AI-generated contributions.
+\end{document}
